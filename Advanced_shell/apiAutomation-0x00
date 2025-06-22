@@ -1,0 +1,16 @@
+!#bin/bash
+
+API_URL="https://pokeapi.co/api/v2/pokemon/pikachu"
+
+curl -s -w "%{http_code}" -o data.json "$API_URL" > status_code.tmp
+
+STATUS_CODE=$(cat status_code.tmp)
+
+if [ "$STATUS_CODE" -ne 200 ]; then
+  echo "[$(date)] Failed to fetch data for Pikachu. Status code: $STATUS_CODE" >> errors.txt
+  rm -f data.json
+else
+  echo "Data successfully saved to data.json"
+fi
+
+rm -f status_code.tmp
