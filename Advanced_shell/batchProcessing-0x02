@@ -1,22 +1,39 @@
-#!bin/bash
+#!/bin/bash
 
 mkdir -p pokemon_data
 
 pokemon_list=(bulbasaur ivysaur venusaur charmander charmeleon)
+max_retries=3
+retry_delay=2 
 
 for name in "${pokemon_list[@]}"; do
   echo "Fetching data for $name..."
 
   API_URL="https://pokeapi.co/api/v2/pokemon/$name"
+  attempt=1
+  success=false
 
-  response=$(curl -s -w "%{http_code}" -o "pokemon_data/${name}.json" "$API_URL")
+  while [ $attempt -le $max_retries ]; do
+   
+    response=$(curl -s -w "%{http_code}" -o "pokemon_data/${name}.json" "$API_URL")
 
-  if [ "$response" -eq 200 ]; then
-    echo "Saved data to pokemon_data/${name}.json ✅"
-  else
-    echo "Failed to fetch data for $name ❌ (Status: $response)"
-    rm -f "pokemon_data/${name}.json"
+    if [ "$response" -eq 200 ]; then
+      echo "Saved data to pokemon_data/${name}.json ✅"
+      success=true
+      break
+    else
+      echo "Attempt $attempt failed for $name (Status: $response). Retrying in $retry_delay seconds..."
+      rm -f "pokemon_data/${name}.json"
+      ((attempt++))
+      sleep $retry_delay
+    fi
+  done
+
+  if [ "$success" = false ]; then
+    echo "Failed to fetch data for $name after $max_retries attempts. Skipping and logging error."
+    echo "[$(date)] Failed to fetch data for $name after $max_retries attempts (Status: $response)" >> pokemon_data/errors.log
   fi
 
+  
   sleep 1
 done
