@@ -43,4 +43,5 @@ done
 # Wait for all background jobs to complete
 wait
 
+# kill $(jobs -p)
 echo "All fetches completed."
